@@ -3,22 +3,17 @@ package net.thunderingstatic.catchcombo.config;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.neoforged.fml.loading.FMLPaths;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Map;
 
 public final class ConfigManager {
-    private static final Logger LOGGER = LoggerFactory.getLogger("CatchCombo/Config");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final Path CONFIG_PATH = FMLPaths.CONFIGDIR.get().resolve("catchcombo.json");
-
-    private static volatile CatchComboConfig config = new CatchComboConfig();
+    private static final Path PATH = FMLPaths.CONFIGDIR.get().resolve("catchcombo.json");
+    private static CatchComboConfig config = new CatchComboConfig();
 
     private ConfigManager() {}
 
@@ -28,66 +23,41 @@ public final class ConfigManager {
 
     public static synchronized void load() {
         try {
-            Files.createDirectories(CONFIG_PATH.getParent());
-
-            if (!Files.exists(CONFIG_PATH)) {
+            Files.createDirectories(PATH.getParent());
+            if (Files.exists(PATH)) {
+                try (Reader reader = Files.newBufferedReader(PATH)) {
+                    CatchComboConfig loaded = GSON.fromJson(reader, CatchComboConfig.class);
+                    config = loaded == null ? new CatchComboConfig() : loaded;
+                }
+            } else {
                 config = new CatchComboConfig();
-                save();
-                LOGGER.info("Created default catch combo config at {}", CONFIG_PATH);
-                return;
             }
-
-            try (Reader reader = Files.newBufferedReader(CONFIG_PATH)) {
-                CatchComboConfig loaded = GSON.fromJson(reader, CatchComboConfig.class);
-                config = loaded == null ? new CatchComboConfig() : loaded;
-                sanitize(config);
-            }
-            LOGGER.info("Loaded catch combo config from {}", CONFIG_PATH);
+            sanitize();
+            save();
         } catch (Exception exception) {
-            LOGGER.error("Unable to load catch combo config; using defaults", exception);
+            System.err.println("[Catch Combo] Failed to load config: " + exception.getMessage());
             config = new CatchComboConfig();
         }
     }
 
     public static synchronized void save() throws IOException {
-        try (Writer writer = Files.newBufferedWriter(CONFIG_PATH)) {
+        try (Writer writer = Files.newBufferedWriter(PATH)) {
             GSON.toJson(config, writer);
         }
     }
 
-    public static int valueAtThreshold(Map<Integer, Integer> thresholds, int combo, int fallback) {
-        if (thresholds == null || thresholds.isEmpty()) return fallback;
-
-        int result = fallback;
-        int bestThreshold = Integer.MIN_VALUE;
-        for (Map.Entry<Integer, Integer> entry : thresholds.entrySet()) {
-            Integer threshold = entry.getKey();
-            Integer value = entry.getValue();
-            if (threshold != null && value != null && threshold <= combo && threshold > bestThreshold) {
-                bestThreshold = threshold;
-                result = value;
-            }
-        }
-        return result;
-    }
-
-    private static void sanitize(CatchComboConfig value) {
-        if (value.general == null) value.general = new CatchComboConfig.General();
-        if (value.hud == null) value.hud = new CatchComboConfig.Hud();
-        if (value.shiny == null) value.shiny = new CatchComboConfig.Shiny();
-        if (value.ivs == null) value.ivs = new CatchComboConfig.Ivs();
-        if (value.rewards == null) value.rewards = new CatchComboConfig.Rewards();
-
-        value.general.maxCombo = Math.max(1, value.general.maxCombo);
-        if (value.shiny.rolls == null) value.shiny.rolls = new CatchComboConfig.Shiny().rolls;
-        if (value.ivs.guaranteedPerfect == null) {
-            value.ivs.guaranteedPerfect = new CatchComboConfig.Ivs().guaranteedPerfect;
-        }
-        if (value.general.timeFormat == null || value.general.timeFormat.isBlank()) {
-            value.general.timeFormat = "clock";
-        }
-        if (value.rewards.milestones == null) {
-            value.rewards.milestones = new CatchComboConfig.Rewards().milestones;
-        }
+    private static void sanitize() {
+        CatchComboConfig defaults = new CatchComboConfig();
+        if (config.general == null) config.general = defaults.general;
+        if (config.hud == null) config.hud = defaults.hud;
+        if (config.shiny == null) config.shiny = defaults.shiny;
+        if (config.ivs == null) config.ivs = defaults.ivs;
+        if (config.notifications == null) config.notifications = defaults.notifications;
+        if (config.rewards == null) config.rewards = defaults.rewards;
+        if (config.shiny.rolls == null || config.shiny.rolls.isEmpty()) config.shiny.rolls = defaults.shiny.rolls;
+        if (config.ivs.guaranteedPerfect == null || config.ivs.guaranteedPerfect.isEmpty()) config.ivs.guaranteedPerfect = defaults.ivs.guaranteedPerfect;
+        if (config.notifications.milestones == null) config.notifications.milestones = defaults.notifications.milestones;
+        if (config.rewards.milestones == null) config.rewards.milestones = defaults.rewards.milestones;
+        config.general.maxCombo = Math.max(1, config.general.maxCombo);
     }
 }

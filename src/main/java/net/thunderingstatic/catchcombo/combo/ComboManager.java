@@ -1,7 +1,7 @@
 package net.thunderingstatic.catchcombo.combo;
 
-import net.minecraft.server.level.ServerPlayer;
 import net.thunderingstatic.catchcombo.config.ConfigManager;
+import net.minecraft.server.level.ServerPlayer;
 
 public final class ComboManager {
     private ComboManager() {}
@@ -12,46 +12,44 @@ public final class ComboManager {
 
     public static ComboData recordCatch(ServerPlayer player, String species, boolean shiny) {
         ComboData previous = get(player);
-        long now = System.currentTimeMillis();
-        boolean sameSpecies = previous.isActive() && previous.species().equals(species);
-
-        if (previous.isActive() && !sameSpecies
-                && !ConfigManager.get().general.breakOnDifferentSpecies) {
-            return previous;
+        boolean same = previous.isActive() && previous.species().equals(species);
+        int count = same ? previous.count() + 1 : 1;
+        count = Math.min(count, ConfigManager.get().general.maxCombo);
+        long now = player.level().getGameTime();
+        long accumulated = previous.accumulatedActiveTicks();
+        long activeStart = previous.activeStartGameTime();
+        if (!same) {
+            accumulated = previous.totalActiveTicks(now);
+            activeStart = now;
         }
-
-        int nextCount = sameSpecies ? previous.count() + 1 : 1;
-        nextCount = Math.min(nextCount, ConfigManager.get().general.maxCombo);
-
-        long totalActiveMillis = previous.totalActiveMillis();
-        long activeSinceMillis = previous.activeSinceMillis();
-        if (!sameSpecies) {
-            totalActiveMillis = previous.currentActiveMillis(now);
-            activeSinceMillis = now;
-        } else if (activeSinceMillis <= 0L) {
-            activeSinceMillis = now;
-        }
-
-        int highestCombo = previous.highestCombo();
-        String highestSpecies = previous.highestSpecies();
-        if (nextCount > highestCombo) {
-            highestCombo = nextCount;
-            highestSpecies = species;
-        }
-
-        ComboData updated = new ComboData(
-                species,
-                nextCount,
-                true,
-                highestCombo,
-                highestSpecies,
-                previous.lifetimeCatches() + 1L,
-                previous.shinyCatches() + (shiny ? 1L : 0L),
-                totalActiveMillis,
-                activeSinceMillis
-        );
+        int highest = Math.max(previous.highestCombo(), count);
+        String highestSpecies = count >= previous.highestCombo() ? species : previous.highestSpecies();
+        ComboData updated = new ComboData(species, count, true, highest, highestSpecies,
+                previous.lifetimeCatches() + 1, previous.shinyCatches() + (shiny ? 1 : 0), accumulated, activeStart);
         ComboStorage.write(player, updated);
         return updated;
+    }
+
+    public static ComboData set(ServerPlayer player, String species, int count) {
+        ComboData previous = get(player);
+        int bounded = Math.max(0, Math.min(count, ConfigManager.get().general.maxCombo));
+        long now = player.level().getGameTime();
+        if (bounded == 0) {
+            reset(player);
+            return get(player);
+        }
+        int highest = Math.max(previous.highestCombo(), bounded);
+        String highestSpecies = bounded >= previous.highestCombo() ? species : previous.highestSpecies();
+        ComboData updated = new ComboData(species, bounded, true, highest, highestSpecies,
+                previous.lifetimeCatches(), previous.shinyCatches(), previous.totalActiveTicks(now), now);
+        ComboStorage.write(player, updated);
+        return updated;
+    }
+
+    public static ComboData add(ServerPlayer player, int amount) {
+        ComboData current = get(player);
+        if (!current.isActive()) return current;
+        return set(player, current.species(), current.count() + amount);
     }
 
     public static void consumePendingShiny(ServerPlayer player) {
@@ -60,10 +58,6 @@ public final class ComboManager {
     }
 
     public static void reset(ServerPlayer player) {
-        ComboStorage.resetCurrent(player);
-    }
-
-    public static void resetAll(ServerPlayer player) {
-        ComboStorage.resetAll(player);
+        ComboStorage.resetActive(player);
     }
 }

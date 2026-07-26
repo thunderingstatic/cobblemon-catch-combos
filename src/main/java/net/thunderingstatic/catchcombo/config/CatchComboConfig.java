@@ -10,6 +10,8 @@ public final class CatchComboConfig {
     public Hud hud = new Hud();
     public Shiny shiny = new Shiny();
     public Ivs ivs = new Ivs();
+    public Spawning spawning = new Spawning();
+    public Notifications notifications = new Notifications();
     public Rewards rewards = new Rewards();
 
     public static final class General {
@@ -28,15 +30,14 @@ public final class CatchComboConfig {
 
     public static final class Shiny {
         public boolean enabled = true;
-        public Map<Integer, Integer> rolls = defaultShinyRolls();
+        public Map<Integer, Integer> rolls = defaultRolls();
 
-        private static Map<Integer, Integer> defaultShinyRolls() {
+        private static Map<Integer, Integer> defaultRolls() {
             Map<Integer, Integer> values = new LinkedHashMap<>();
-            values.put(1, 2);
-            values.put(6, 3);
-            values.put(11, 4);
-            values.put(21, 5);
-            values.put(31, 6);
+            values.put(0, 1);
+            values.put(11, 2);
+            values.put(32, 4);
+            values.put(52, 6);
             return values;
         }
     }
@@ -47,25 +48,44 @@ public final class CatchComboConfig {
 
         private static Map<Integer, Integer> defaultPerfectIvs() {
             Map<Integer, Integer> values = new LinkedHashMap<>();
-            values.put(6, 1);
+            values.put(0, 0);
             values.put(11, 2);
-            values.put(21, 3);
-            values.put(31, 4);
+            values.put(32, 3);
+            values.put(52, 4);
             return values;
         }
     }
 
-    public static final class Rewards {
+    public static final class Spawning {
         public boolean enabled = true;
-        public List<Reward> milestones = defaultRewards();
+        public Map<Integer, Double> sameSpeciesWeightBonus = defaultWeightBonuses();
 
-        private static List<Reward> defaultRewards() {
-            return new ArrayList<>();
+        private static Map<Integer, Double> defaultWeightBonuses() {
+            Map<Integer, Double> values = new LinkedHashMap<>();
+            values.put(0, 0.0);
+            values.put(11, 0.25);
+            values.put(32, 0.50);
+            values.put(52, 0.85);
+            return values;
         }
     }
 
-    public static final class Reward {
+    public static final class Notifications {
+        public boolean enabled = true;
+        public boolean chat = true;
+        public boolean title = true;
+        public boolean sound = true;
+        public List<Integer> milestones = new ArrayList<>(List.of(11, 32, 52));
+    }
+
+    public static final class Rewards {
+        public boolean enabled = true;
+        public List<RewardMilestone> milestones = new ArrayList<>();
+    }
+
+    public static final class RewardMilestone {
         public int combo = 0;
+        public int repeatEvery = 0;
         public List<String> commands = new ArrayList<>();
     }
 }
