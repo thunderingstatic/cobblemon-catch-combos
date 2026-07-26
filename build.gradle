@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'net.thunderingstatic'
-version = '1.0.0-clean'
+version = '0.3.0'
 
 base {
     archivesName = 'cobblemon-catch-combos'
