@@ -1,0 +1,31 @@
+modLoader="javafml"
+loaderVersion="[1,)"
+license="MIT"
+
+[[mods]]
+modId="catchcombo"
+version="${version}"
+displayName="Cobblemon Catch Combos"
+description='''A modular, server-side catch combo system for Cobblemon.'''
+authors="Thundering Static"
+
+[[dependencies.catchcombo]]
+modId="neoforge"
+type="required"
+versionRange="[21.1.0,)"
+ordering="NONE"
+side="SERVER"
+
+[[dependencies.catchcombo]]
+modId="minecraft"
+type="required"
+versionRange="[1.21.1,1.21.2)"
+ordering="NONE"
+side="SERVER"
+
+[[dependencies.catchcombo]]
+modId="cobblemon"
+type="required"
+versionRange="[1.7.3,1.8.0)"
+ordering="AFTER"
+side="SERVER"
