@@ -3,6 +3,7 @@ package net.thunderingstatic.catchcombo.ivs;
 import com.cobblemon.mod.common.api.pokemon.stats.Stat;
 import com.cobblemon.mod.common.api.pokemon.stats.Stats;
 import com.cobblemon.mod.common.pokemon.Pokemon;
+import net.thunderingstatic.catchcombo.config.ConfigManager;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,23 +13,18 @@ public final class IVManager {
     private IVManager() {}
 
     public static int guaranteedPerfectIvs(int combo) {
-        if (combo >= 31) return 4;
-        if (combo >= 21) return 3;
-        if (combo >= 11) return 2;
-        if (combo >= 6) return 1;
-        return 0;
+        if (!ConfigManager.get().ivs.enabled) return 0;
+        return Math.max(0, Math.min(6, ConfigManager.valueAtThreshold(
+                ConfigManager.get().ivs.guaranteedPerfect, combo, 0
+        )));
     }
 
     public static int applyGuaranteedPerfectIvs(Pokemon pokemon, int amount) {
         if (amount <= 0) return 0;
 
         List<Stat> stats = new ArrayList<>(List.of(
-                Stats.HP,
-                Stats.ATTACK,
-                Stats.DEFENCE,
-                Stats.SPECIAL_ATTACK,
-                Stats.SPECIAL_DEFENCE,
-                Stats.SPEED
+                Stats.HP, Stats.ATTACK, Stats.DEFENCE,
+                Stats.SPECIAL_ATTACK, Stats.SPECIAL_DEFENCE, Stats.SPEED
         ));
         Collections.shuffle(stats);
 

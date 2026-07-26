@@ -1,8 +1,8 @@
 package net.thunderingstatic.catchcombo.api;
 
+import net.minecraft.server.level.ServerPlayer;
 import net.thunderingstatic.catchcombo.combo.ComboData;
 import net.thunderingstatic.catchcombo.combo.ComboManager;
-import net.minecraft.server.level.ServerPlayer;
 
 public final class CatchComboAPI {
     private CatchComboAPI() {}
@@ -17,6 +17,19 @@ public final class CatchComboAPI {
 
     public static int getCount(ServerPlayer player) {
         return getCombo(player).count();
+    }
+
+    public static int getHighestCombo(ServerPlayer player) {
+        return getCombo(player).highestCombo();
+    }
+
+    public static long getLifetimeCatches(ServerPlayer player) {
+        return getCombo(player).lifetimeCatches();
+    }
+
+    public static boolean isChaining(ServerPlayer player, String species) {
+        ComboData data = getCombo(player);
+        return data.isActive() && data.species().equals(species);
     }
 
     public static void reset(ServerPlayer player) {
