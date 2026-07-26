@@ -76,11 +76,18 @@ public final class ConfigManager {
         if (value.hud == null) value.hud = new CatchComboConfig.Hud();
         if (value.shiny == null) value.shiny = new CatchComboConfig.Shiny();
         if (value.ivs == null) value.ivs = new CatchComboConfig.Ivs();
+        if (value.rewards == null) value.rewards = new CatchComboConfig.Rewards();
 
         value.general.maxCombo = Math.max(1, value.general.maxCombo);
         if (value.shiny.rolls == null) value.shiny.rolls = new CatchComboConfig.Shiny().rolls;
         if (value.ivs.guaranteedPerfect == null) {
             value.ivs.guaranteedPerfect = new CatchComboConfig.Ivs().guaranteedPerfect;
+        }
+        if (value.general.timeFormat == null || value.general.timeFormat.isBlank()) {
+            value.general.timeFormat = "clock";
+        }
+        if (value.rewards.milestones == null) {
+            value.rewards.milestones = new CatchComboConfig.Rewards().milestones;
         }
     }
 }

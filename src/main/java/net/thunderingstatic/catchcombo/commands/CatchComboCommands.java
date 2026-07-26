@@ -11,10 +11,10 @@ import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.thunderingstatic.catchcombo.combo.ComboData;
 import net.thunderingstatic.catchcombo.combo.ComboManager;
 import net.thunderingstatic.catchcombo.config.ConfigManager;
+import net.thunderingstatic.catchcombo.util.DisplayFormatter;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 
 public final class CatchComboCommands {
     @SubscribeEvent
@@ -44,7 +44,8 @@ public final class CatchComboCommands {
         }
 
         player.sendSystemMessage(Component.literal("Current catch combo: ")
-                .append(Component.literal(combo.species()).withStyle(ChatFormatting.YELLOW))
+                .append(Component.literal(DisplayFormatter.speciesName(combo.species()))
+                        .withStyle(ChatFormatting.YELLOW))
                 .append(Component.literal(" ×" + combo.count()).withStyle(ChatFormatting.AQUA)));
         return combo.count();
     }
@@ -57,17 +58,36 @@ public final class CatchComboCommands {
         long activeMillis = combo.currentActiveMillis(System.currentTimeMillis());
 
         player.sendSystemMessage(Component.literal("Catch Combo Statistics").withStyle(ChatFormatting.GOLD));
-        player.sendSystemMessage(Component.literal("Current: ")
-                .append(Component.literal(combo.isActive()
-                        ? combo.species() + " ×" + combo.count()
-                        : "None").withStyle(ChatFormatting.YELLOW)));
-        player.sendSystemMessage(Component.literal("Highest: ")
-                .append(Component.literal(combo.highestCombo() > 0
-                        ? combo.highestSpecies() + " ×" + combo.highestCombo()
-                        : "None").withStyle(ChatFormatting.AQUA)));
-        player.sendSystemMessage(Component.literal("Lifetime combo catches: " + combo.lifetimeCatches()));
-        player.sendSystemMessage(Component.literal("Shiny catches during combos: " + combo.shinyCatches()));
-        player.sendSystemMessage(Component.literal("Total active combo time: " + formatDuration(activeMillis)));
+
+        player.sendSystemMessage(Component.literal("Current Combo").withStyle(ChatFormatting.YELLOW));
+        if (combo.isActive()) {
+            player.sendSystemMessage(Component.literal("  Species: ")
+                    .append(Component.literal(DisplayFormatter.speciesName(combo.species()))
+                            .withStyle(ChatFormatting.AQUA)));
+            player.sendSystemMessage(Component.literal("  Count: ")
+                    .append(Component.literal(Integer.toString(combo.count()))
+                            .withStyle(ChatFormatting.AQUA)));
+        } else {
+            player.sendSystemMessage(Component.literal("  None").withStyle(ChatFormatting.GRAY));
+        }
+
+        player.sendSystemMessage(Component.literal("Highest Combo").withStyle(ChatFormatting.YELLOW));
+        if (combo.highestCombo() > 0) {
+            player.sendSystemMessage(Component.literal("  Species: ")
+                    .append(Component.literal(DisplayFormatter.speciesName(combo.highestSpecies()))
+                            .withStyle(ChatFormatting.AQUA)));
+            player.sendSystemMessage(Component.literal("  Count: ")
+                    .append(Component.literal(Integer.toString(combo.highestCombo()))
+                            .withStyle(ChatFormatting.AQUA)));
+        } else {
+            player.sendSystemMessage(Component.literal("  None").withStyle(ChatFormatting.GRAY));
+        }
+
+        player.sendSystemMessage(Component.literal("Lifetime Statistics").withStyle(ChatFormatting.YELLOW));
+        player.sendSystemMessage(Component.literal("  Combo catches: " + combo.lifetimeCatches()));
+        player.sendSystemMessage(Component.literal("  Combo shinies: " + combo.shinyCatches()));
+        player.sendSystemMessage(Component.literal("  Active combo time: "
+                + DisplayFormatter.duration(activeMillis, ConfigManager.get().general.timeFormat)));
         return 1;
     }
 
@@ -78,18 +98,25 @@ public final class CatchComboCommands {
                 .limit(10)
                 .toList();
 
-        source.sendSuccess(() -> Component.literal("Catch Combo Leaderboard (online players)")
+        source.sendSuccess(() -> Component.literal("Catch Combo Leaderboard")
                 .withStyle(ChatFormatting.GOLD), false);
+        source.sendSuccess(() -> Component.literal("Online players")
+                .withStyle(ChatFormatting.DARK_GRAY), false);
 
         int place = 1;
         for (ServerPlayer player : ranked) {
             ComboData data = ComboManager.get(player);
             if (data.highestCombo() <= 0) continue;
+
             int currentPlace = place++;
             source.sendSuccess(() -> Component.literal(currentPlace + ". ")
-                    .append(player.getDisplayName().copy().withStyle(ChatFormatting.YELLOW))
-                    .append(Component.literal(" — " + data.highestSpecies() + " ×" + data.highestCombo())
-                            .withStyle(ChatFormatting.AQUA)), false);
+                    .withStyle(ChatFormatting.YELLOW)
+                    .append(player.getDisplayName().copy().withStyle(ChatFormatting.WHITE)), false);
+            source.sendSuccess(() -> Component.literal("   ")
+                    .append(Component.literal(DisplayFormatter.speciesName(data.highestSpecies()))
+                            .withStyle(ChatFormatting.AQUA))
+                    .append(Component.literal(" ×" + data.highestCombo())
+                            .withStyle(ChatFormatting.YELLOW)), false);
         }
 
         if (place == 1) {
@@ -102,7 +129,9 @@ public final class CatchComboCommands {
         ServerPlayer player = getPlayer(source);
         if (player == null) return 0;
         ComboManager.reset(player);
-        player.sendSystemMessage(Component.literal("Current catch combo reset. Lifetime statistics were preserved."));
+        player.sendSystemMessage(Component.literal(
+                "Current catch combo reset. Lifetime statistics were preserved."
+        ));
         return 1;
     }
 
@@ -119,15 +148,5 @@ public final class CatchComboCommands {
             source.sendFailure(Component.literal("This command must be run by a player."));
             return null;
         }
-    }
-
-    private static String formatDuration(long millis) {
-        long seconds = Math.max(0L, millis / 1000L);
-        long hours = seconds / 3600L;
-        long minutes = (seconds % 3600L) / 60L;
-        long remainingSeconds = seconds % 60L;
-        if (hours > 0L) return String.format(Locale.ROOT, "%dh %02dm %02ds", hours, minutes, remainingSeconds);
-        if (minutes > 0L) return String.format(Locale.ROOT, "%dm %02ds", minutes, remainingSeconds);
-        return remainingSeconds + "s";
     }
 }

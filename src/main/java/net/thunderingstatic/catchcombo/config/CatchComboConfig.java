@@ -1,6 +1,8 @@
 package net.thunderingstatic.catchcombo.config;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 public final class CatchComboConfig {
@@ -8,17 +10,20 @@ public final class CatchComboConfig {
     public Hud hud = new Hud();
     public Shiny shiny = new Shiny();
     public Ivs ivs = new Ivs();
+    public Rewards rewards = new Rewards();
 
     public static final class General {
         public boolean breakOnDifferentSpecies = true;
         public boolean breakOnLogout = false;
         public boolean breakOnDeath = false;
         public int maxCombo = 999;
+        public String timeFormat = "clock";
     }
 
     public static final class Hud {
         public boolean enabled = true;
         public boolean showPerfectIvs = true;
+        public boolean milestoneColors = true;
     }
 
     public static final class Shiny {
@@ -48,5 +53,19 @@ public final class CatchComboConfig {
             values.put(31, 4);
             return values;
         }
+    }
+
+    public static final class Rewards {
+        public boolean enabled = true;
+        public List<Reward> milestones = defaultRewards();
+
+        private static List<Reward> defaultRewards() {
+            return new ArrayList<>();
+        }
+    }
+
+    public static final class Reward {
+        public int combo = 0;
+        public List<String> commands = new ArrayList<>();
     }
 }

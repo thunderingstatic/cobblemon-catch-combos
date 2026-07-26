@@ -57,3 +57,39 @@ build/libs/cobblemon-catch-combos-1.0.0-clean.jar
 3. Sounds, particles, and richer HUD options
 4. Spawn weighting and rare-spawn attraction
 5. Optional Hidden Ability and size extensions
+
+## v0.2.1 quality-of-life update
+
+- Registry identifiers are formatted as readable species names in commands.
+- Statistics use grouped sections and configurable clock/compact time formatting.
+- The online leaderboard uses a two-line entry format.
+- Action-bar combo counts change color at milestones.
+- Configurable milestone command rewards are supported.
+
+Reward placeholders:
+
+- `%player%` - player name
+- `%species%` - full species identifier, such as `cobblemon:cottonee`
+- `%combo%` - current combo count
+
+Example `catchcombo.json` section:
+
+```json
+"rewards": {
+  "enabled": true,
+  "milestones": [
+    {
+      "combo": 25,
+      "commands": [
+        "give %player% cobblemon:exp_candy_m 2"
+      ]
+    },
+    {
+      "combo": 50,
+      "commands": [
+        "say %player% reached a catch combo of %combo% with %species%."
+      ]
+    }
+  ]
+}
+```

@@ -8,6 +8,7 @@ import net.thunderingstatic.catchcombo.combo.ComboData;
 import net.thunderingstatic.catchcombo.combo.ComboManager;
 import net.thunderingstatic.catchcombo.hud.HudManager;
 import net.thunderingstatic.catchcombo.ivs.IVManager;
+import net.thunderingstatic.catchcombo.rewards.RewardManager;
 
 import java.util.function.Consumer;
 
@@ -31,6 +32,7 @@ public final class CatchListener {
                 IVManager.guaranteedPerfectIvs(combo.count())
         );
 
+        RewardManager.grantMilestoneRewards(player, species, combo.count());
         HudManager.showCatch(player, pokemon, combo.count(), improved);
     }
 }
